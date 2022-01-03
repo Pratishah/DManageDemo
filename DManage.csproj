@@ -28,7 +28,6 @@
 
   <ItemGroup>
     <Folder Include="Controllers\SystemManagement\" />
-    <Folder Include="Repository\RepoClasses\" />
   </ItemGroup>
 
 

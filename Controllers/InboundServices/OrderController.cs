@@ -1,4 +1,5 @@
 ﻿using DManage.Models;
+using DManage.Repository.Services;
 using DManage.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -16,20 +17,22 @@ namespace DManage.Controllers
     [ApiController]
     public class OrderController : ControllerBase
     {
-        private readonly DManageContext dmanageContext;
+        
+        private readonly Iorder _orderrepo;
         readonly ILogger<OrderController> _log;
-        public OrderController(DManageContext _dmanageContext, ILogger<OrderController> log)
+        public OrderController(Iorder orderrepo, ILogger<OrderController> log)
 
         {
+            _orderrepo = orderrepo;
             _log = log;
-            dmanageContext = _dmanageContext;
+            
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAllOrders()
         {
-            var y = await dmanageContext.Orders.ToListAsync();
-            return Ok(y);
+           var orders= await _orderrepo.GetAllOrders();
+            return Ok(orders);
         }
 
 
@@ -37,28 +40,15 @@ namespace DManage.Controllers
         [Route("{orderId}")]
         public async Task<IActionResult> GetOrd(Guid orderId)
         {
-            var orders = await dmanageContext.Orders.FirstOrDefaultAsync(order => order.OrderId == orderId);
-            return Ok(orders);
+            var order = await _orderrepo.GetOrd(orderId);
+            return Ok(order);
         }
 
         [HttpPost]
         [Route("placeOrder")]
         public async Task<IActionResult> PlaceOrder(PlaceorderView placeorderView)
         {
-
-            Order neworder = new Order
-            {
-                CustomerId = placeorderView.CustomerID,
-                OrderDate = DateTime.Now,
-                OrderType = placeorderView.OrderType,
-                OrderStatus = "Pending",
-                OrderNavigation = new OrderQuantity { Id = Guid.NewGuid(), ProductId = placeorderView.OrderedProductID, Quantity = placeorderView.Quantity }
-            };
-
-            dmanageContext.Orders.Add(neworder);
-
-            var newobj = await dmanageContext.SaveChangesAsync();
-            _log.LogInformation("new order Placed : " + neworder.OrderId);
+            Order neworder = await _orderrepo.PlaceOrder(placeorderView);
             return StatusCode(StatusCodes.Status201Created, neworder);
 
         }
@@ -68,35 +58,26 @@ namespace DManage.Controllers
         [Route("verify/{orderID}")]
         public async Task<IActionResult> VerifyOrder(Guid orderID)
         {
-            Dictionary<Guid, int> availablespace = new Dictionary<Guid, int>();
-
-            Order order = await dmanageContext.Orders.Include(navigation => navigation.OrderNavigation).Where(order => order.OrderId == orderID & order.OrderStatus == "Pending").FirstOrDefaultAsync();
-            int orderedQuantity = order.OrderNavigation.Quantity;
-            var OrderedproductID = order.OrderNavigation.ProductId;
-            var OrderedproductTypeID = dmanageContext.ProductMasters.Where(x => x.ProductId == OrderedproductID).FirstOrDefault().ProductTypeId;
-
-
-            var SameTypePallateList = dmanageContext.Pallates.Where(x => x.ProductTypeId == OrderedproductTypeID);
-            var joinTable = dmanageContext.Pallates.Join(dmanageContext.ProductInventories,
-                                                            pallate => pallate.PallateId,
-                                                            prodInv => prodInv.PallateId,
-                                                            (pallate, prodInv) => new
-                                                            {
-                                                                pallate,
-                                                                prodInv
-                                                            });
-
-            Boolean SpaceAvailable = false;
-
-            foreach (var item in joinTable)
+            try
             {
-                availablespace.Add(item.pallate.PallateId, item.prodInv.Quantity);
-                if (orderedQuantity < item.prodInv.Quantity)
-                    SpaceAvailable = true;
-                break;
+                bool SpaceAvailable = await _orderrepo.VerifyOrder(orderID);
+                if (SpaceAvailable == true)
+                {
+                    return Ok("Verification complete");
+                }
+                else
+                {
 
+                    return Ok("Verification rejected , no space available in pallate for this product");
+                }
             }
-            return Ok(SpaceAvailable);
+            catch (Exception ex)
+            {
+
+                _log.LogError($"error occured {ex.Message}",ex);
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+           
         }
 
 
@@ -104,29 +85,11 @@ namespace DManage.Controllers
         [Route("Accept-reject-order/{orderId}")]
         public async Task<IActionResult> AcceptRejectOrder(Guid orderId)
         {
-            Dictionary<Guid, int> availablespace = new Dictionary<Guid, int>();
 
-            Order x = await dmanageContext.Orders.Include(x => x.OrderNavigation).Where(x => x.OrderId == orderId & x.OrderStatus == "Pending").FirstOrDefaultAsync();
-            int orderedQuantity = x.OrderNavigation.Quantity;
-            var OrderedproductID = x.OrderNavigation.ProductId;
-            var OrderedproductTypeID = dmanageContext.ProductMasters.Where(x => x.ProductId == OrderedproductID).FirstOrDefault().ProductTypeId;
-
-
-            var SameTypePallateList = dmanageContext.Pallates.Where(pallate => pallate.ProductTypeId == OrderedproductTypeID);
-
-            var JoinedPallateProductInventory = from pallate in dmanageContext.Pallates
-                                                join Pid in dmanageContext.ProductInventories
-                                                on pallate.PallateId equals Pid.PallateId
-                                                where (pallate.ProductTypeId == OrderedproductTypeID)
-                                                select new { ID = pallate.PallateId, quantity = Pid.Quantity };
-
-            var OccupiedSpaceinPallate = JoinedPallateProductInventory.Sum(joinedtable => joinedtable.quantity);
-            var PallateTypeCapacity = SameTypePallateList.Sum(joinedtable => joinedtable.Capacity);
-
-            if (PallateTypeCapacity - OccupiedSpaceinPallate > orderedQuantity)
+            bool result = await _orderrepo.AcceptRejectOrder(orderId);
+            if (result)
             {
-                _log.LogInformation($" New Order Accepted Space occupied  {OccupiedSpaceinPallate} , available space for this product type : {PallateTypeCapacity - OccupiedSpaceinPallate} in Node1 ");
-                return Ok($"Order Accepted Space occupied  {OccupiedSpaceinPallate} , available space for this product type : {PallateTypeCapacity - OccupiedSpaceinPallate} in Node1 ");
+                return Ok($"Order :{orderId} Accepted");
             }
             else
             {

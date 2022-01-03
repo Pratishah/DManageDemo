@@ -1,5 +1,7 @@
 
 using DManage.Models;
+using DManage.Repository.RepoClasses;
+using DManage.Repository.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -23,6 +25,8 @@ namespace DManage
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddSingleton<DManageContext>();
+            services.AddTransient<Iorder, OrderRepository>();
+
             services.AddControllers().AddNewtonsoftJson(options =>
                 options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
             );

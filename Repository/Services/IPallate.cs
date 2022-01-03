@@ -7,17 +7,19 @@ using System.Threading.Tasks;
 
 namespace DManage.Repository.Services
 {
-   public interface Iorder
+   public interface IPallate
     {
 
         public Task<List<Order>> GetAllOrders();
         public Task<Order> GetOrd(Guid OdrID);
 
+        public Task<Order> PlaceOrder(Guid OrderedproductID, string orderType, Guid CustomerID, int quantity);
+        // List<Order> GetAllOrders();
 
 
         public Task<Order> PlaceOrder(PlaceorderView placeorderView);
-        public Task<bool> VerifyOrder(Guid orderID);
-        public Task<bool> AcceptRejectOrder(Guid orderId);
+        public Task VerifyOrder(Guid orderID);
+        public Task AcceptRejectOrder(Guid orderId);
 
 
 
