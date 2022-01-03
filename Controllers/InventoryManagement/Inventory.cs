@@ -9,7 +9,6 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace DManage.Controllers.InventoryManagement
 {
@@ -32,7 +31,6 @@ namespace DManage.Controllers.InventoryManagement
         public async Task<IActionResult> PallateDetails()
         {
             var m = await dmanageContext.Pallates.ToListAsync();
-            //var m=await dmanageContext.SaveChangesAsync();
             return Ok(m);
         }
 
@@ -49,7 +47,7 @@ namespace DManage.Controllers.InventoryManagement
         [Route("ProductLocation/productID")]
 
 
-        //check once
+        ///
         public async Task<IActionResult> ProductsLocation(Guid productID)
         {
             try
@@ -105,9 +103,6 @@ namespace DManage.Controllers.InventoryManagement
             try
             {
                 var order = await dmanageContext.Orders.Include(order => order.OrderNavigation).Select(item => new orderViewModel { OrderID = item.OrderId, OrderStatus = item.OrderStatus }).ToListAsync();
-
-
-
                 if (order.Count > 0)
                 {
                     return Ok(order);
@@ -127,10 +122,10 @@ namespace DManage.Controllers.InventoryManagement
 
         [HttpPost]
         [Route("movepallate/{pallateID}/nodeID")]
-        public async Task<IActionResult> MovePallate([FromBody] Guid pallateID, [Required] int nodeID )
+        public async Task<IActionResult> MovePallate([FromBody] Guid pallateID, [Required] int nodeID)
         {
             var pallate = dmanageContext.Pallates.Where(x => x.PallateId == pallateID).FirstOrDefault();
-                pallate.NodeId = nodeID;
+            pallate.NodeId = nodeID;
             var m = await dmanageContext.SaveChangesAsync();
             if (m > 0)
             {

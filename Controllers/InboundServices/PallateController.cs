@@ -1,9 +1,11 @@
 ﻿using DManage.Models;
+using DManage.Repository.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -16,44 +18,38 @@ namespace DManage.Controllers.InventoryManagement
     public class PallateController : ControllerBase
     {
 
-        private readonly DManageContext dmanageContext;
+
+        private readonly IPallate _pallaterepo;
         readonly ILogger<PallateController> _log;
-        public PallateController(DManageContext dmanageContext, ILogger<PallateController> log)
+        public PallateController(IPallate pallaterepo, ILogger<PallateController> log)
         {
+            _pallaterepo = pallaterepo;
             _log = log;
-            this.dmanageContext = dmanageContext;
         }
 
 
         [HttpPost]
         [Route("update/pallate/{pallateID}/{quantity}")]
-        public async Task<IActionResult> ModifyPallateQuantities([FromBody] Guid pallateID, int quantity)
+        public async Task<IActionResult> ModifyPallateQuantities([Required] Guid pallateID, [Required] int quantity)
         {
 
-            var inventory = dmanageContext.ProductInventories.Where(x => x.PallateId == pallateID).FirstOrDefault();
-            inventory.Quantity = quantity;
-            await dmanageContext.SaveChangesAsync();
+            var inventory = await _pallaterepo.ModifyPallateQuantities(pallateID, quantity);
+            _log.LogInformation($"pallateID: {pallateID} quantity modified to {quantity}");
             return Ok(inventory);
         }
 
 
-
-
         [HttpPost]
         [Route("Move/pallate/{pallateID}/{nodeID}")]
-        public async Task<IActionResult> MovePallate([FromBody] Guid pallateID, int nodeID)
+        public async Task<IActionResult> MovePallate([Required] Guid pallateID, [Required] int nodeID)
         {
             try
             {
+                var pallate = await _pallaterepo.MovePallate(pallateID, nodeID);
 
-                var pallate = dmanageContext.Pallates.Where(pallate => pallate.PallateId == pallateID).FirstOrDefault();
-                _log.LogInformation($"Pallate {pallateID} moved from {pallate.NodeId} to new Node : {nodeID}");
-                pallate.NodeId = nodeID;
-                var m = await dmanageContext.SaveChangesAsync();
-
-                if (m > 0)
+                if (pallate != null)
                 {
-                    return Ok(m);
+                    return Ok(pallate);
                 }
                 else
                 {
@@ -65,9 +61,6 @@ namespace DManage.Controllers.InventoryManagement
                 _log.LogError(ex.Message, ex);
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
-
         }
-
-
     }
 }

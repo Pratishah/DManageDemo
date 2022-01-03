@@ -1,20 +1,19 @@
-﻿using System;
+﻿using DManage.Models;
+using DManage.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace DManage.Repository.Services
 {
-    interface ISystemManagement
+    public interface ISystemManagement
     {
-        public int ProductTypeID { get; set; }
-        public string TypeName { get; set; }
 
-        public void DefineProductType() { }
-        public void DefinePallateCapacity() { }
-
-        public void DefinePallateType() { }
-        public void DefineNode() { }
+        public Task<ProductType> CreateProductType(string productName);
+        public Task<Pallate> EditPallateCapacity(Guid pallateID , int newcapacity);
+        public Task<Node> DefineNode(string nodeName, string zone);
+        public Task<Pallate> CreatePallate(PallateViewModel pallate);
 
 
 

@@ -8,11 +8,11 @@ using System.Threading.Tasks;
 
 namespace DManage.Repository.Services
 {
-   public interface IPallate
+   public interface IProductInventoryRepository
     {
 
-        public Task<Models.ProductInventory> ModifyPallateQuantities(Guid pallateID, int quantity);
-        public Task<Pallate> MovePallate(Guid pallateID, int nodeID);
+        public Task<int> CheckAvailableQuantity(Guid productID);
+       
 
 
 

@@ -26,6 +26,9 @@ namespace DManage
         {
             services.AddSingleton<DManageContext>();
             services.AddTransient<Iorder, OrderRepository>();
+            services.AddTransient<IPallate, PallateRepository>();
+            services.AddTransient<IProductInventoryRepository, ProductInventoryRepository>();
+            services.AddTransient<ISystemManagement, SystemManagementRepository>();
 
             services.AddControllers().AddNewtonsoftJson(options =>
                 options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
