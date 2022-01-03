@@ -125,7 +125,8 @@ namespace DManage.Controllers
 
             if (PallateTypeCapacity - OccupiedSpaceinPallate > orderedQuantity)
             {
-                return Ok($"Order Accepted Space occupied  {OccupiedSpaceinPallate} , available space for this product type are {PallateTypeCapacity - OccupiedSpaceinPallate} in Node1 ");
+                _log.LogInformation($" New Order Accepted Space occupied  {OccupiedSpaceinPallate} , available space for this product type : {PallateTypeCapacity - OccupiedSpaceinPallate} in Node1 ");
+                return Ok($"Order Accepted Space occupied  {OccupiedSpaceinPallate} , available space for this product type : {PallateTypeCapacity - OccupiedSpaceinPallate} in Node1 ");
             }
             else
             {

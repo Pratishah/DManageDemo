@@ -1,4 +1,5 @@
 ﻿using DManage.Models;
+using DManage.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,11 +10,18 @@ namespace DManage.Repository.Services
    public interface Iorder
     {
 
-        public List<Order> GetAllOrders();
-        public Order GetOrd(Guid OdrID);
+        public Task<List<Order>> GetAllOrders();
+        public Task<Order> GetOrd(Guid OdrID);
 
-        public Order PlaceOrder(Guid OrderedproductID, string orderType, Guid CustomerID, int quantity);
+        public Task<Order> PlaceOrder(Guid OrderedproductID, string orderType, Guid CustomerID, int quantity);
         // List<Order> GetAllOrders();
-       
+
+
+        public Task<Order> PlaceOrder(PlaceorderView placeorderView);
+        public Task VerifyOrder(Guid orderID);
+        public Task AcceptRejectOrder(Guid orderId);
+
+
+
     }
 }

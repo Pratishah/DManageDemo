@@ -46,7 +46,9 @@ namespace DManage.Controllers.InventoryManagement
             try
             {
 
-                dmanageContext.Pallates.Where(pallate => pallate.PallateId == pallateID).FirstOrDefault().NodeId = nodeID;
+                var pallate = dmanageContext.Pallates.Where(pallate => pallate.PallateId == pallateID).FirstOrDefault();
+                _log.LogInformation($"Pallate {pallateID} moved from {pallate.NodeId} to new Node : {nodeID}");
+                pallate.NodeId = nodeID;
                 var m = await dmanageContext.SaveChangesAsync();
 
                 if (m > 0)
@@ -55,13 +57,12 @@ namespace DManage.Controllers.InventoryManagement
                 }
                 else
                 {
-                  
                     return StatusCode(StatusCodes.Status500InternalServerError);
                 }
             }
             catch (Exception ex)
             {
-                _log.LogError(ex.Message,ex);
+                _log.LogError(ex.Message, ex);
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
 
